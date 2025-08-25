@@ -29,7 +29,7 @@ class QuranFlashcardApp {
 
     async loadChapters() {
         try {
-            const response = await fetch(`${this.apiBaseUrl}/api/chapters`);
+            const response = await fetch(`${this.apiBaseUrl}/api/chapters?_=${Date.now()}`);
             this.chapters = await response.json();
             this.populateChapterSelect();
         } catch (error) {
@@ -40,7 +40,7 @@ class QuranFlashcardApp {
 
     async loadTranslations() {
         try {
-            const response = await fetch(`${this.apiBaseUrl}/api/translations`);
+            const response = await fetch(`${this.apiBaseUrl}/api/translations?_=${Date.now()}`);
             this.translations = await response.json();
             this.populateTranslationSelect();
         } catch (error) {
@@ -167,7 +167,7 @@ class QuranFlashcardApp {
         
         for (let verseNum = startVerse; verseNum <= endVerse; verseNum++) {
             try {
-                const response = await fetch(`${this.apiBaseUrl}/api/compare/${chapterNum}/${verseNum}`);
+                const response = await fetch(`${this.apiBaseUrl}/api/compare/${chapterNum}/${verseNum}?_=${Date.now()}`);
                 const verseData = await response.json();
                 
                 if (verseData.arabic && verseData.translations[translationKey]) {
