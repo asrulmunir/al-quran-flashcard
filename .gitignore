@@ -34,9 +34,8 @@ Thumbs.db
 *.log
 logs/
 
-# Cloudflare
+# Cloudflare Pages
 .wrangler/
-wrangler.toml.bak
 
 # Temporary files
 *.tmp
