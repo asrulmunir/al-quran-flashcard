@@ -563,21 +563,9 @@ kbd {
         padding: 25px;
     }
     
-    .guide-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-        padding: 12px 20px;
-    }
-    
-    .guide-item span:last-child {
-        font-size: 0.85rem;
-    }
-    
-    kbd {
-        font-size: 0.75rem;
-        padding: 3px 6px;
-        min-width: 20px;
+    /* Hide keyboard guide on mobile */
+    .keyboard-guide {
+        display: none;
     }
     
     .flashcard {
@@ -660,6 +648,11 @@ kbd {
     
     .setup-panel {
         padding: 20px;
+    }
+    
+    /* Ensure keyboard guide stays hidden on small mobile */
+    .keyboard-guide {
+        display: none;
     }
     
     .flashcard {
