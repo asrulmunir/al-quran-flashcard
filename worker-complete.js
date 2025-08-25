@@ -1,0 +1,207 @@
+// Complete Cloudflare Worker for Al-Quran Flashcard App
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  const url = new URL(request.url)
+  const pathname = url.pathname
+
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Cache-Control': 'public, max-age=3600',
+  }
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 200, headers: corsHeaders })
+  }
+
+  let content, contentType
+
+  switch (pathname) {
+    case '/':
+    case '/index.html':
+      content = getIndexHtml()
+      contentType = 'text/html; charset=utf-8'
+      break
+    case '/styles.css':
+      content = getStylesCss()
+      contentType = 'text/css; charset=utf-8'
+      break
+    case '/script.js':
+      content = getScriptJs()
+      contentType = 'application/javascript; charset=utf-8'
+      break
+    default:
+      content = getIndexHtml()
+      contentType = 'text/html; charset=utf-8'
+  }
+
+  return new Response(content, {
+    headers: {
+      'Content-Type': contentType,
+      ...corsHeaders,
+    },
+  })
+}
+
+function getIndexHtml() {
+  return `<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Arab Al-Quran</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Flashcard Arab Al-Quran</h1>
+            <p>Belajar dan hafal perkataan Arab dari Al-Quran Suci</p>
+        </header>
+
+        <div class="setup-panel" id="setupPanel">
+            <div class="setup-form">
+                <h2>Sediakan Sesi Pembelajaran Anda</h2>
+                
+                <div class="form-group">
+                    <label for="chapterSelect">Pilih Surah:</label>
+                    <select id="chapterSelect">
+                        <option value="">Memuatkan surah...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="translationSelect">Pilih Terjemahan:</label>
+                    <select id="translationSelect">
+                        <option value="">Memuatkan terjemahan...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="verseRange">Bilangan Ayat:</label>
+                    <div class="verse-range-container">
+                        <input type="number" id="startVerse" placeholder="Ayat mula" min="1" value="1">
+                        <span>hingga</span>
+                        <input type="number" id="endVerse" placeholder="Ayat akhir" min="1" value="5">
+                    </div>
+                    <small class="help-text">Pilih julat ayat untuk sesi flashcard anda</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="studyMode">Mod Pembelajaran:</label>
+                    <select id="studyMode">
+                        <option value="arabic-to-translation">Arab → Terjemahan</option>
+                        <option value="translation-to-arabic">Terjemahan → Arab</option>
+                        <option value="mixed">Mod Campuran</option>
+                    </select>
+                </div>
+
+                <button id="startStudyBtn" class="btn btn-primary">Mulakan Sesi Pembelajaran</button>
+            </div>
+        </div>
+
+        <div class="flashcard-container" id="flashcardContainer" style="display: none;">
+            <div class="keyboard-guide">
+                <div class="guide-toggle" id="guideToggle">
+                    <span>⌨️ Panduan Kekunci</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="guide-content" id="guideContent">
+                    <div class="guide-item">
+                        <kbd>Space</kbd> atau <kbd>Enter</kbd>
+                        <span>Tunjukkan jawapan</span>
+                    </div>
+                    <div class="guide-item">
+                        <kbd>←</kbd> <kbd>→</kbd>
+                        <span>Navigasi kad</span>
+                    </div>
+                    <div class="guide-item">
+                        <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>
+                        <span>Betul / Sukar / Salah</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+                <span class="progress-text" id="progressText">0 / 0</span>
+            </div>
+
+            <div class="flashcard" id="flashcard">
+                <div class="flashcard-inner">
+                    <div class="flashcard-front">
+                        <div class="card-header">
+                            <span class="verse-location" id="verseLocation"></span>
+                            <span class="card-type" id="cardType"></span>
+                        </div>
+                        <div class="card-content">
+                            <div class="question-text" id="questionText"></div>
+                        </div>
+                        <button class="btn btn-secondary reveal-btn" id="revealBtn">Tunjukkan Jawapan</button>
+                    </div>
+                    
+                    <div class="flashcard-back">
+                        <div class="card-header">
+                            <span class="verse-location" id="verseLocationBack"></span>
+                            <span class="card-type" id="cardTypeBack"></span>
+                        </div>
+                        <div class="card-content">
+                            <div class="answer-section">
+                                <div class="arabic-text" id="arabicAnswer"></div>
+                                <div class="translation-text" id="translationAnswer"></div>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-success" id="correctBtn">✓ Betul</button>
+                            <button class="btn btn-warning" id="difficultBtn">⚠ Sukar</button>
+                            <button class="btn btn-danger" id="incorrectBtn">✗ Salah</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="study-controls">
+                <button class="btn btn-outline" id="prevBtn">← Sebelum</button>
+                <button class="btn btn-outline" id="nextBtn">Seterusnya →</button>
+                <button class="btn btn-outline" id="resetBtn">🔄 Set Semula</button>
+                <button class="btn btn-outline" id="backToSetupBtn">⚙️ Kembali ke Tetapan</button>
+            </div>
+        </div>
+
+        <div class="results-panel" id="resultsPanel" style="display: none;">
+            <h2>Sesi Pembelajaran Selesai!</h2>
+            <div class="results-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="correctCount">0</span>
+                    <span class="stat-label">Betul</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="difficultCount">0</span>
+                    <span class="stat-label">Sukar</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="incorrectCount">0</span>
+                    <span class="stat-label">Salah</span>
+                </div>
+            </div>
+            <div class="results-actions">
+                <button class="btn btn-primary" id="reviewDifficultBtn">Ulangkaji Kad Sukar</button>
+                <button class="btn btn-secondary" id="newSessionBtn">Mulakan Sesi Baharu</button>
+            </div>
+        </div>
+
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <p>Memuatkan ayat-ayat...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>`
+}
