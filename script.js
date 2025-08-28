@@ -241,7 +241,16 @@ class QuranFlashcardApp {
         // Update front of card
         document.getElementById('verseLocation').textContent = `${verse.chapterName} ${verse.chapterNumber}:${verse.verseNumber}`;
         document.getElementById('cardType').textContent = cardType;
-        document.getElementById('questionText').textContent = this.decodeHtmlEntities(questionText);
+        const questionElement = document.getElementById('questionText');
+        questionElement.textContent = this.decodeHtmlEntities(questionText);
+        
+        // Apply Arabic font class if question is in Arabic
+        if (this.currentSession.studyMode === 'arabic-to-translation' || 
+            (this.currentSession.studyMode === 'mixed' && questionText === verse.arabic)) {
+            questionElement.classList.add('arabic');
+        } else {
+            questionElement.classList.remove('arabic');
+        }
 
         // Update back of card
         document.getElementById('verseLocationBack').textContent = `${verse.chapterName} ${verse.chapterNumber}:${verse.verseNumber}`;
